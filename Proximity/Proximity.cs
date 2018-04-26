@@ -15,15 +15,15 @@ namespace Proximity
         public static readonly DependencyProperty ProximityProperty = DependencyProperty.RegisterAttached(
             "Proximity",
             typeof(int),
-            typeof(UIElement),
+            typeof(DependencyObject),
             new PropertyMetadata(null));
 
-        public static void SetProximity(UIElement element, int value)
+        public static void SetProximity(DependencyObject element, int value)
         {
             element.SetValue(ProximityProperty, value);
         }
 
-        public static int GetProximity(UIElement element)
+        public static int GetProximity(DependencyObject element)
         {
             return (int)element.GetValue(ProximityProperty);
         }
@@ -31,15 +31,15 @@ namespace Proximity
         public static readonly DependencyProperty ProximityRangeProperty = DependencyProperty.RegisterAttached(
             "ProximityRange",
             typeof(int),
-            typeof(UIElement),
+            typeof(DependencyObject),
             new PropertyMetadata(0, new PropertyChangedCallback(ProximityRangeChanged)));
 
-        public static void SetProximityRange(UIElement element, int value)
+        public static void SetProximityRange(DependencyObject element, int value)
         {
             element.SetValue(ProximityRangeProperty, value);
         }
 
-        public static int GetProximityRange(UIElement element)
+        public static int GetProximityRange(DependencyObject element)
         {
             return (int)element.GetValue(ProximityRangeProperty);
         }
@@ -124,18 +124,31 @@ namespace Proximity
             foreach (var target in _listeningElements[element])
             {
                 var proximityRange = GetProximityRange(target);
-                var point = e.GetCurrentPoint(target);
-                var position = point.Position;
-                var y = position.Y;
-                var x = position.X;
+                var position = e.GetCurrentPoint(target).Position;
 
-                var proximityRect = new Rect(new Point(proximityRange * -1, proximityRange * -1), new Size(proximityRange * 2 + target.RenderSize.Width, proximityRange * 2 + target.RenderSize.Height));
+                var proximityRect = new Rect(
+                    new Point(proximityRange * -1, proximityRange * -1), 
+                    new Size(proximityRange * 2 + target.RenderSize.Width, proximityRange * 2 + target.RenderSize.Height));
+
                 var targetRect = new Rect(new Point(0,0), target.RenderSize);
 
-                if (proximityRect.Contains(position) && !targetRect.Contains(position))
+                if (proximityRect.Contains(position))
                 {
-                    var proximity = Convert.ToInt32(Math.Max(Math.Abs(x), Math.Abs(y)));
-                    SetProximity(target, proximity);
+                    if (!targetRect.Contains(position))
+                    {
+                        var y = position.Y - targetRect.Height / 2;
+                        var x = position.X - targetRect.Width / 2;
+                        var proximity = Convert.ToInt32(Math.Max(Math.Abs(x) - targetRect.Width / 2, Math.Abs(y) - targetRect.Height / 2));
+                        SetProximity(target, proximity);
+                    }
+                    else
+                    {
+                        SetProximity(target, 0);
+                    }
+                }
+                else
+                {
+                    SetProximity(target, proximityRange);
                 }
             }
         }

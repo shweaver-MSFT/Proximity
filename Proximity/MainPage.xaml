@@ -7,22 +7,32 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Background="LightSlateGray">
 
         <Border HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Height="800"
                 Width="800"
                 BorderThickness="1"
-                BorderBrush="Black">
+                BorderBrush="Black"
+                Background="White">
 
-            <Button HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Grid>
+                <Viewbox Height="{Binding (local:ProximityField.Proximity), ElementName=TheButton, Mode=OneWay}"
+                         Width="{Binding (local:ProximityField.Proximity), ElementName=TheButton, Mode=OneWay}">
+                    <Rectangle RadiusX="1" RadiusY="1" Width="2" Height="2" Fill="Blue" />
+                </Viewbox>
+
+                <Button Name="TheButton"
                     Height="200"
                     Width="200"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     local:ProximityField.ProximityRange="300"
                     Content="{Binding (local:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
-            </Button>
+                </Button>
+            </Grid>
+
         </Border>
     </Grid>
 </Page>

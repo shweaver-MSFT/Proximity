@@ -10,30 +10,46 @@
 
     <Grid Background="LightSlateGray">
 
-        <Border HorizontalAlignment="Center"
+        <Grid HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Height="800"
-                Width="800"
                 BorderThickness="1"
                 BorderBrush="Black"
                 Background="White">
 
-            <Grid>
-                <Viewbox Height="{Binding (p:ProximityField.Proximity), ElementName=TheButton, Mode=OneWay}"
-                         Width="{Binding (p:ProximityField.Proximity), ElementName=TheButton, Mode=OneWay}">
-                    <Rectangle RadiusX="1" RadiusY="1" Width="2" Height="2" Fill="Blue" />
-                </Viewbox>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition MinWidth="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />
+            </Grid.ColumnDefinitions>
 
-                <Button Name="TheButton"
+            <Grid.RowDefinitions>
+                <RowDefinition MinHeight="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition MinHeight="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />
+            </Grid.RowDefinitions>
+
+            <Viewbox 
+                    Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Height="{Binding (p:ProximityField.Proximity), ElementName=TheButton, Mode=OneWay}"
+                    Width="{Binding (p:ProximityField.Proximity), ElementName=TheButton, Mode=OneWay}">
+                <Rectangle RadiusX="1" RadiusY="1" Width="2" Height="2" Fill="Blue" />
+            </Viewbox>
+
+            <Button Name="TheButton"
+                    Grid.Column="1"
+                    Grid.Row="1"
                     Height="200"
                     Width="200"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     p:ProximityField.ProximityRange="300"
+                    p:ProximityField.ProximityMode="{x:Bind p:ProximityMode.Edge}"
                     Content="{Binding (p:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
-                </Button>
-            </Grid>
+            </Button>
 
-        </Border>
+        </Grid>
     </Grid>
 </Page>

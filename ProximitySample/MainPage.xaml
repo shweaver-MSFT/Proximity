@@ -28,6 +28,28 @@
                 <RowDefinition MinHeight="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />
             </Grid.RowDefinitions>
 
+            
+
+            <Viewbox 
+                    Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Height="{Binding (p:ProximityField.Proximity), ElementName=TheButton2, Mode=OneWay}"
+                    Width="{Binding (p:ProximityField.Proximity), ElementName=TheButton2, Mode=OneWay}">
+                <Rectangle RadiusX="1" RadiusY="1" Width="2" Height="2" Fill="Yellow" />
+            </Viewbox>
+
+            <Viewbox 
+                    Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Height="{Binding (p:ProximityField.Proximity), ElementName=TheButton3, Mode=OneWay}"
+                    Width="{Binding (p:ProximityField.Proximity), ElementName=TheButton3, Mode=OneWay}">
+                <Rectangle RadiusX="1" RadiusY="1" Width="2" Height="2" Fill="Red" />
+            </Viewbox>
+            
             <Viewbox 
                     Grid.RowSpan="3"
                     Grid.ColumnSpan="3"
@@ -37,7 +59,7 @@
                     Width="{Binding (p:ProximityField.Proximity), ElementName=TheButton, Mode=OneWay}">
                 <Rectangle RadiusX="1" RadiusY="1" Width="2" Height="2" Fill="Blue" />
             </Viewbox>
-
+            
             <Button Name="TheButton"
                     Grid.Column="1"
                     Grid.Row="1"
@@ -46,6 +68,28 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     p:ProximityField.ProximityRange="300"
+                    p:ProximityField.ProximityMode="{x:Bind p:ProximityMode.Edge}"
+                    Content="{Binding (p:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
+            </Button>
+            <Button Name="TheButton2"
+                    Grid.Column="1"
+                    Grid.Row="2"
+                    Height="200"
+                    Width="200"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    p:ProximityField.ProximityRange="800"
+                    p:ProximityField.ProximityMode="{x:Bind p:ProximityMode.Edge}"
+                    Content="{Binding (p:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
+            </Button>
+            <Button Name="TheButton3"
+                    Grid.Column="1"
+                    Grid.Row="0"
+                    Height="200"
+                    Width="200"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    p:ProximityField.ProximityRange="500"
                     p:ProximityField.ProximityMode="{x:Bind p:ProximityMode.Edge}"
                     Content="{Binding (p:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
             </Button>

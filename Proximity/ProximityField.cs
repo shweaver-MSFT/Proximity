@@ -103,10 +103,10 @@ namespace Proximity
             {
                 targets = new List<FrameworkElement>();
                 element.PointerMoved += Element_PointerMoved;
+                _listeningElements.Add(element, targets);
             }
 
             targets.Add(target);
-            _listeningElements.Add(element, targets);
         }
 
         /// <summary>
@@ -183,9 +183,11 @@ namespace Proximity
                     ? new Rect(
                         new Point(proximityRange * -1, proximityRange * -1),
                         new Size(proximityRange * 2 + target.RenderSize.Width, proximityRange * 2 + target.RenderSize.Height))
-                    : new Rect(
-                        new Point(proximityRange * -1 + target.RenderSize.Width / 2, proximityRange * -1 + target.RenderSize.Height / 2),
-                        new Size(proximityRange * 2, proximityRange * 2));
+                    : (mode == ProximityMode.Center) 
+                        ? new Rect(
+                            new Point(proximityRange * -1 + target.RenderSize.Width / 2, proximityRange * -1 + target.RenderSize.Height / 2),
+                            new Size(proximityRange * 2, proximityRange * 2))
+                        : throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
 
                 var targetRect = new Rect(new Point(0,0), target.RenderSize);
 
@@ -214,14 +216,14 @@ namespace Proximity
                     }
                     else
                     {
-                        if (mode == ProximityMode.Center)
+                        if (mode == ProximityMode.Edge)
+                        {
+                            SetProximity(target, 0);
+                        }
+                        else if (mode == ProximityMode.Center)
                         {
                             var proximity = Convert.ToInt32(Math.Max(Math.Abs(x), Math.Abs(y)));
                             SetProximity(target, proximity);
-                        }
-                        else if (mode == ProximityMode.Edge)
-                        {
-                            SetProximity(target, 0);
                         }
                         else
                         {

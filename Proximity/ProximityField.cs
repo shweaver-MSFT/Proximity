@@ -76,29 +76,38 @@ namespace Proximity
         /// <param name="args"></param>
         private static void ProximityRangeChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
         {
-            var element = sender as FrameworkElement;
-            element.Loaded += (s, e) =>
+            var target = sender as FrameworkElement;
+            var element = GetRootUIElement(target);
+
+            void handleValueChange(FrameworkElement t, UIElement e, int? newValue)
             {
-                if (args.NewValue == null || (int)args.NewValue <= 0)
+                if (!newValue.HasValue || newValue <= 0)
                 {
-                    DeregisterPointerListener(element);
+                    DeregisterPointerListener(t, e);
                 }
 
-                if ((int)args.NewValue != 0)
+                if (newValue.HasValue && newValue > 0)
                 {
-                    RegisterPointerListener(element);
+                    RegisterPointerListener(t, e);
                 }
-            };
+            }
+
+            if (element == target)
+            {
+                target.Loaded += (s, e) => handleValueChange(target, GetRootUIElement(target), (int?)args.NewValue);
+            }
+            else
+            {
+                handleValueChange(target, element, (int?)args.NewValue);
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="target"></param>
-        private static void RegisterPointerListener(FrameworkElement target)
+        private static void RegisterPointerListener(FrameworkElement target, UIElement element)
         {
-            var element = GetRootUIElement(target);
-
             if (!_listeningElements.TryGetValue(element, out var targets))
             {
                 targets = new List<FrameworkElement>();
@@ -106,6 +115,7 @@ namespace Proximity
                 _listeningElements.Add(element, targets);
             }
 
+            target.Unloaded += (s, e) => DeregisterPointerListener(target, element);
             targets.Add(target);
         }
 
@@ -113,9 +123,8 @@ namespace Proximity
         /// 
         /// </summary>
         /// <param name="target"></param>
-        private static void DeregisterPointerListener(FrameworkElement target)
+        private static void DeregisterPointerListener(FrameworkElement target, UIElement element)
         {
-            var element = GetRootUIElement(target);
             var targets = _listeningElements[element];
 
             if (targets.Count == 0)

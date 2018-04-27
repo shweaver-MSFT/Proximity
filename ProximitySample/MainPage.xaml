@@ -10,7 +10,8 @@
 
     <Grid Background="LightSlateGray">
 
-        <Grid HorizontalAlignment="Center"
+        <Grid 
+              HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 BorderThickness="1"
                 BorderBrush="Black"
@@ -27,8 +28,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition MinHeight="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />
             </Grid.RowDefinitions>
-
-            
 
             <Viewbox 
                     Grid.RowSpan="3"

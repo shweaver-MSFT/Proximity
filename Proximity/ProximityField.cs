@@ -72,6 +72,25 @@ namespace Proximity
         /// <summary>
         /// 
         /// </summary>
+        public static readonly DependencyProperty ProximityPaddingProperty = DependencyProperty.RegisterAttached(
+            "ProximityPadding",
+            typeof(int),
+            typeof(DependencyObject),
+            new PropertyMetadata(0));
+
+        public static void SetProximityPadding(DependencyObject element, int value)
+        {
+            (element as FrameworkElement).SetValue(ProximityPaddingProperty, value);
+        }
+
+        public static int GetProximityPadding(DependencyObject element)
+        {
+            return (int)(element as FrameworkElement).GetValue(ProximityPaddingProperty);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
         private static void ProximityRangeChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
@@ -186,37 +205,54 @@ namespace Proximity
             foreach (var target in _listeningElements[element])
             {
                 var proximityRange = GetProximityRange(target);
+                var proximityPadding = GetProximityPadding(target);
                 var mode = GetProximityMode(target);
 
-                var proximityRect = (mode == ProximityMode.Edge)
-                    ? new Rect(
-                        new Point(proximityRange * -1, proximityRange * -1),
-                        new Size(proximityRange * 2 + target.RenderSize.Width, proximityRange * 2 + target.RenderSize.Height))
-                    : (mode == ProximityMode.Center) 
-                        ? new Rect(
-                            new Point(proximityRange * -1 + target.RenderSize.Width / 2, proximityRange * -1 + target.RenderSize.Height / 2),
-                            new Size(proximityRange * 2, proximityRange * 2))
-                        : throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
+                Point point;
+                Size size;
+                var rangeAndPadding = proximityRange + proximityPadding;
+                var negativeRangeAndPadding = rangeAndPadding * -1;
+                var doubleRangeAndPadding = rangeAndPadding * 2;
+                var targetRenderWidth = target.RenderSize.Width;
+                var targetRenderHeight = target.RenderSize.Height;
+                var targetWidthAndPadding = targetRenderWidth + proximityPadding * 2;
+                var targetHeightAndPadding = targetRenderHeight + proximityPadding * 2;
 
-                var targetRect = new Rect(new Point(0,0), target.RenderSize);
+                if (mode == ProximityMode.Edge)
+                {
+                    point = new Point(negativeRangeAndPadding, negativeRangeAndPadding);
+                    size = new Size(doubleRangeAndPadding + targetRenderWidth, doubleRangeAndPadding + targetRenderHeight);
+                }
+                else if (mode == ProximityMode.Center)
+                {
+                    point = new Point(negativeRangeAndPadding + targetRenderWidth / 2, negativeRangeAndPadding + targetRenderHeight / 2);
+                    size = new Size(doubleRangeAndPadding, doubleRangeAndPadding);
+                }
+                else
+                {
+                    throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
+                }
 
+                var proximityRect = new Rect(point, size);
+                var targetRect = new Rect(new Point(proximityPadding * -1, proximityPadding * -1), new Size(targetWidthAndPadding, targetHeightAndPadding));
+
+                // Get and adjust current point x, y to be proximity from center.
                 var position = e.GetCurrentPoint(target).Position;
-                var y = position.Y - targetRect.Height / 2;
-                var x = position.X - targetRect.Width / 2;
+                var y = Math.Abs(position.Y - ((targetRect.Height / 2) - proximityPadding));
+                var x = Math.Abs(position.X - ((targetRect.Width / 2) - proximityPadding));
 
+                int proximity;
                 if (proximityRect.Contains(position))
                 {
                     if (!targetRect.Contains(position))
                     {
                         if (mode == ProximityMode.Edge)
                         {
-                            var proximity = Convert.ToInt32(Math.Max(Math.Abs(x) - targetRect.Width / 2, Math.Abs(y) - targetRect.Height / 2));
-                            SetProximity(target, proximity);
+                            proximity = Convert.ToInt32(Math.Max(x - targetRenderWidth / 2, y - targetRenderHeight / 2)) - proximityPadding;
                         }
                         else if (mode == ProximityMode.Center)
                         {
-                            var proximity = Convert.ToInt32(Math.Max(Math.Abs(x), Math.Abs(y)));
-                            SetProximity(target, proximity);
+                            proximity = Convert.ToInt32(Math.Max(x - proximityPadding, y - proximityPadding));
                         }
                         else
                         {
@@ -227,12 +263,12 @@ namespace Proximity
                     {
                         if (mode == ProximityMode.Edge)
                         {
-                            SetProximity(target, 0);
+                            System.Diagnostics.Debug.WriteLine($"In Prox - In Target: {x}");
+                            proximity = 0;
                         }
                         else if (mode == ProximityMode.Center)
                         {
-                            var proximity = Convert.ToInt32(Math.Max(Math.Abs(x), Math.Abs(y)));
-                            SetProximity(target, proximity);
+                            proximity = Convert.ToInt32(Math.Max(x, y)) - proximityPadding;
                         }
                         else
                         {
@@ -242,8 +278,11 @@ namespace Proximity
                 }
                 else
                 {
-                    SetProximity(target, proximityRange);
+                    System.Diagnostics.Debug.WriteLine("$Out Prox - Out Target: {x}");
+                    proximity = proximityRange;
                 }
+
+                SetProximity(target, Math.Max(0, proximity));
             }
         }
     }

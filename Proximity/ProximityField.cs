@@ -12,15 +12,29 @@ namespace Proximity
         // A dict of top-level UIElements and the FrameworkElement that are being listened for
         private static Dictionary<UIElement, List<FrameworkElement>> _listeningElements = new Dictionary<UIElement, List<FrameworkElement>>();
 
+        #region Properties
         /// <summary>
         /// 
         /// </summary>
-        public static readonly DependencyProperty ProximityProperty = DependencyProperty.RegisterAttached(
-            "Proximity",
-            typeof(int),
-            typeof(DependencyObject),
-            new PropertyMetadata(null));
+        public static readonly DependencyProperty ProximityProperty = DependencyProperty.RegisterAttached("Proximity", typeof(int), typeof(DependencyObject), new PropertyMetadata(null));
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public static readonly DependencyProperty ProximityRangeProperty = DependencyProperty.RegisterAttached("ProximityRange", typeof(int), typeof(DependencyObject), new PropertyMetadata(0, new PropertyChangedCallback(ProximityRangeChanged)));
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public static readonly DependencyProperty ProximityModeProperty = DependencyProperty.RegisterAttached(nameof(ProximityMode), typeof(ProximityMode), typeof(DependencyObject), new PropertyMetadata(ProximityMode.Edge));
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static readonly DependencyProperty ProximityPaddingProperty = DependencyProperty.RegisterAttached("ProximityPadding", typeof(int), typeof(DependencyObject), new PropertyMetadata(0));
+        #endregion Properties
+
+        #region Property Getters/Setters
         public static void SetProximity(DependencyObject element, int value)
         {
             (element as FrameworkElement).SetValue(ProximityProperty, value);
@@ -30,15 +44,6 @@ namespace Proximity
         {
             return (int)(element as FrameworkElement).GetValue(ProximityProperty);
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static readonly DependencyProperty ProximityRangeProperty = DependencyProperty.RegisterAttached(
-            "ProximityRange",
-            typeof(int),
-            typeof(DependencyObject),
-            new PropertyMetadata(0, new PropertyChangedCallback(ProximityRangeChanged)));
 
         public static void SetProximityRange(DependencyObject element, int value)
         {
@@ -50,15 +55,6 @@ namespace Proximity
             return (int)(element as FrameworkElement).GetValue(ProximityRangeProperty);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static readonly DependencyProperty ProximityModeProperty = DependencyProperty.RegisterAttached(
-            nameof(ProximityMode),
-            typeof(ProximityMode),
-            typeof(DependencyObject),
-            new PropertyMetadata(ProximityMode.Edge, new PropertyChangedCallback(ProximityModeChanged)));
-
         public static void SetProximityMode(DependencyObject element, ProximityMode value)
         {
             (element as FrameworkElement).SetValue(ProximityModeProperty, value);
@@ -69,15 +65,6 @@ namespace Proximity
             return (ProximityMode)(element as FrameworkElement).GetValue(ProximityModeProperty);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static readonly DependencyProperty ProximityPaddingProperty = DependencyProperty.RegisterAttached(
-            "ProximityPadding",
-            typeof(int),
-            typeof(DependencyObject),
-            new PropertyMetadata(0));
-
         public static void SetProximityPadding(DependencyObject element, int value)
         {
             (element as FrameworkElement).SetValue(ProximityPaddingProperty, value);
@@ -87,12 +74,8 @@ namespace Proximity
         {
             return (int)(element as FrameworkElement).GetValue(ProximityPaddingProperty);
         }
+        #endregion Property Getters/Setters
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
         private static void ProximityRangeChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
         {
             var target = sender as FrameworkElement;
@@ -121,10 +104,6 @@ namespace Proximity
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="target"></param>
         private static void RegisterPointerListener(FrameworkElement target, UIElement element)
         {
             if (!_listeningElements.TryGetValue(element, out var targets))
@@ -138,10 +117,6 @@ namespace Proximity
             targets.Add(target);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="target"></param>
         private static void DeregisterPointerListener(FrameworkElement target, UIElement element)
         {
             var targets = _listeningElements[element];
@@ -157,21 +132,6 @@ namespace Proximity
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        private static void ProximityModeChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
-        {
-
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="target"></param>
-        /// <returns></returns>
         private static UIElement GetRootUIElement(FrameworkElement target)
         {
             DependencyObject root = target;
@@ -193,62 +153,74 @@ namespace Proximity
            return root as UIElement;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        private static Rect GetProximityRect(FrameworkElement target)
+        {
+            var proximityRange = GetProximityRange(target);
+            var proximityPadding = GetProximityPadding(target);
+            var mode = GetProximityMode(target);
+
+            var rangeAndPadding = proximityRange + proximityPadding;
+            var negativeRangeAndPadding = rangeAndPadding * -1;
+            var doubleRangeAndPadding = rangeAndPadding * 2;
+            var targetRenderWidth = target.RenderSize.Width;
+            var targetRenderHeight = target.RenderSize.Height;
+            var targetWidthAndPadding = targetRenderWidth + proximityPadding * 2;
+            var targetHeightAndPadding = targetRenderHeight + proximityPadding * 2;
+
+            Point point;
+            Size size;
+            if (mode == ProximityMode.Edge)
+            {
+                point = new Point(negativeRangeAndPadding, negativeRangeAndPadding);
+                size = new Size(doubleRangeAndPadding + targetRenderWidth, doubleRangeAndPadding + targetRenderHeight);
+            }
+            else if (mode == ProximityMode.Center)
+            {
+                point = new Point(negativeRangeAndPadding + targetRenderWidth / 2, negativeRangeAndPadding + targetRenderHeight / 2);
+                size = new Size(doubleRangeAndPadding, doubleRangeAndPadding);
+            }
+            else
+            {
+                throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
+            }
+
+            return new Rect(point, size);
+        }
+
+        private static Rect GetTargetRect(FrameworkElement target)
+        {
+            var proximityPadding = GetProximityPadding(target);
+            var targetWidthAndPadding = target.RenderSize.Width + proximityPadding * 2;
+            var targetHeightAndPadding = target.RenderSize.Height + proximityPadding * 2;
+            return new Rect(new Point(proximityPadding * -1, proximityPadding * -1), new Size(targetWidthAndPadding, targetHeightAndPadding));
+        }
+
         private static void Element_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             var element = sender as UIElement;
 
             foreach (var target in _listeningElements[element])
             {
-                var proximityRange = GetProximityRange(target);
-                var proximityPadding = GetProximityPadding(target);
                 var mode = GetProximityMode(target);
-
-                Point point;
-                Size size;
-                var rangeAndPadding = proximityRange + proximityPadding;
-                var negativeRangeAndPadding = rangeAndPadding * -1;
-                var doubleRangeAndPadding = rangeAndPadding * 2;
-                var targetRenderWidth = target.RenderSize.Width;
-                var targetRenderHeight = target.RenderSize.Height;
-                var targetWidthAndPadding = targetRenderWidth + proximityPadding * 2;
-                var targetHeightAndPadding = targetRenderHeight + proximityPadding * 2;
-
-                if (mode == ProximityMode.Edge)
-                {
-                    point = new Point(negativeRangeAndPadding, negativeRangeAndPadding);
-                    size = new Size(doubleRangeAndPadding + targetRenderWidth, doubleRangeAndPadding + targetRenderHeight);
-                }
-                else if (mode == ProximityMode.Center)
-                {
-                    point = new Point(negativeRangeAndPadding + targetRenderWidth / 2, negativeRangeAndPadding + targetRenderHeight / 2);
-                    size = new Size(doubleRangeAndPadding, doubleRangeAndPadding);
-                }
-                else
-                {
-                    throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
-                }
-
-                var proximityRect = new Rect(point, size);
-                var targetRect = new Rect(new Point(proximityPadding * -1, proximityPadding * -1), new Size(targetWidthAndPadding, targetHeightAndPadding));
+                var proximityPadding = GetProximityPadding(target);
+                var proximityRange = GetProximityRange(target);
+                var proximityRect = GetProximityRect(target);
+                var targetRect = GetTargetRect(target);
 
                 // Get and adjust current point x, y to be proximity from center.
                 var position = e.GetCurrentPoint(target).Position;
-                var y = Math.Abs(position.Y - ((targetRect.Height / 2) - proximityPadding));
                 var x = Math.Abs(position.X - ((targetRect.Width / 2) - proximityPadding));
+                var y = Math.Abs(position.Y - ((targetRect.Height / 2) - proximityPadding));
 
                 int proximity;
                 if (proximityRect.Contains(position))
                 {
+                    // TODO: Do triangle math to find actual measurement, not just max x,y
                     if (!targetRect.Contains(position))
                     {
                         if (mode == ProximityMode.Edge)
                         {
-                            proximity = Convert.ToInt32(Math.Max(x - targetRenderWidth / 2, y - targetRenderHeight / 2)) - proximityPadding;
+                            proximity = Convert.ToInt32(Math.Max(x - target.RenderSize.Width / 2, y - target.RenderSize.Height / 2)) - proximityPadding;
                         }
                         else if (mode == ProximityMode.Center)
                         {
@@ -278,7 +250,7 @@ namespace Proximity
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("$Out Prox - Out Target: {x}");
+                    System.Diagnostics.Debug.WriteLine($"Out Prox - Out Target: {x}");
                     proximity = proximityRange;
                 }
 

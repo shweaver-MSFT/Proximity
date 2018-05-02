@@ -65,8 +65,9 @@
                     Width="200"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    p:ProximityField.ProximityRange="300"
+                    p:ProximityField.ProximityRange="100"
                     p:ProximityField.ProximityPadding="50"
+                    p:ProximityField.ProximitySpreadMethod="Repeat"
                     p:ProximityField.ProximityMode="{x:Bind p:ProximityMode.Edge}"
                     Content="{Binding (p:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
             </Button>

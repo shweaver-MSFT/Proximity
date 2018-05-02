@@ -252,14 +252,7 @@ namespace Proximity
                             proximity = GetProximityFromCenter(target, position, x, y);
                             break;
                         case ProximityMode.Edge:
-                            if (!targetRect.Contains(position))
-                            {
-                                proximity = GetProximityFromEdge(target, position, x, y);
-                            }
-                            else
-                            {
-                                proximity = 0;
-                            }
+                            proximity = (targetRect.Contains(position)) ? 0 : GetProximityFromEdge(target, position, x, y);
                             break;
                         default:
                             throw new Exception($"Invalid {nameof(ProximityMode)}: {Enum.GetName(typeof(ProximityMode), mode)}");
@@ -278,7 +271,16 @@ namespace Proximity
                             proximity = 0;
                             break;
                         case ProximitySpreadMethod.Reflect:
-                            
+                            //switch (mode)
+                            //{
+                            //    case ProximityMode.Edge: proximity = GetProximityFromEdge(target, position, x, y); break;
+                            //    case ProximityMode.Center: proximity = Math.Max(x - proximityPadding, y - proximityPadding); break;
+                            //    default: throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
+                            //}
+                            //System.Diagnostics.Debug.WriteLine(proximity % proximityRange % 2);
+                            //proximity = (proximity % proximityRange % 2 == 0) ? proximity % proximityRange : proximityRange - (proximity % proximityRange);
+                            throw new NotImplementedException($"Unsupported {nameof(ProximitySpreadMethod)}: {nameof(ProximitySpreadMethod.Reflect)}");
+                            break;
                         case ProximitySpreadMethod.Repeat:
                             switch(mode)
                             {

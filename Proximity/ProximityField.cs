@@ -214,16 +214,19 @@ namespace Proximity
             return new Rect(new Point(proximityPadding * -1, proximityPadding * -1), new Size(targetWidthAndPadding, targetHeightAndPadding));
         }
 
-        private static double GetProximityFromEdge(FrameworkElement target, Point pointerPosition, double xFromCenter, double yFromCenter)
+        private static double MeasureProximity(FrameworkElement target, Point pointerPosition, double xFromCenter, double yFromCenter)
         {
+            var mode = GetProximityMode(target);
             var proximityPadding = GetProximityPadding(target);
-            return Math.Max(xFromCenter - target.RenderSize.Width / 2, yFromCenter - target.RenderSize.Height / 2) - proximityPadding;
-        }
-
-        private static double GetProximityFromCenter(FrameworkElement target, Point pointerPosition, double xFromCenter, double yFromCenter)
-        {
-            var proximityPadding = GetProximityPadding(target);
-            return Math.Max(xFromCenter - proximityPadding, yFromCenter - proximityPadding);
+            switch (mode)
+            {
+                case ProximityMode.Edge:
+                    return Math.Max(xFromCenter - target.RenderSize.Width / 2, yFromCenter - target.RenderSize.Height / 2) - proximityPadding;
+                case ProximityMode.Center:
+                    return Math.Max(xFromCenter, yFromCenter) - proximityPadding;
+                default:
+                    throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
+            }
         }
 
         private static void Element_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -246,22 +249,11 @@ namespace Proximity
                 double proximity;
                 if (proximityRect.Contains(position))
                 {
-                    switch (mode)
-                    {
-                        case ProximityMode.Center:
-                            proximity = GetProximityFromCenter(target, position, x, y);
-                            break;
-                        case ProximityMode.Edge:
-                            proximity = (targetRect.Contains(position)) ? 0 : GetProximityFromEdge(target, position, x, y);
-                            break;
-                        default:
-                            throw new Exception($"Invalid {nameof(ProximityMode)}: {Enum.GetName(typeof(ProximityMode), mode)}");
-                    }
+                    proximity = (mode == ProximityMode.Edge && targetRect.Contains(position)) ? 0 : MeasureProximity(target, position, x, y);
                 }
                 else
                 {
                     var spreadMethod = GetProximitySpreadMethod(target);
-
                     switch(spreadMethod)
                     {
                         case ProximitySpreadMethod.Pad:
@@ -271,30 +263,16 @@ namespace Proximity
                             proximity = 0;
                             break;
                         case ProximitySpreadMethod.Reflect:
-                            //switch (mode)
-                            //{
-                            //    case ProximityMode.Edge: proximity = GetProximityFromEdge(target, position, x, y); break;
-                            //    case ProximityMode.Center: proximity = Math.Max(x - proximityPadding, y - proximityPadding); break;
-                            //    default: throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
-                            //}
-                            //System.Diagnostics.Debug.WriteLine(proximity % proximityRange % 2);
-                            //proximity = (proximity % proximityRange % 2 == 0) ? proximity % proximityRange : proximityRange - (proximity % proximityRange);
-                            throw new NotImplementedException($"Unsupported {nameof(ProximitySpreadMethod)}: {nameof(ProximitySpreadMethod.Reflect)}");
+                            var p = MeasureProximity(target, position, x, y);
+                            var pModRange = p % proximityRange;
+                            proximity = ((p - pModRange) / proximityRange % 2 == 0) ? pModRange : proximityRange - pModRange;
                             break;
                         case ProximitySpreadMethod.Repeat:
-                            switch(mode)
-                            {
-                                case ProximityMode.Edge: proximity = GetProximityFromEdge(target, position, x, y); break;
-                                case ProximityMode.Center: proximity = Math.Max(x - proximityPadding, y - proximityPadding); break;
-                                default: throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
-                            }
-                            proximity = proximity % proximityRange;
+                            proximity = MeasureProximity(target, position, x, y) % proximityRange;
                             break;
                         default:
                             throw new Exception($"Invalid {nameof(ProximitySpreadMethod)}: {Enum.GetName(typeof(ProximitySpreadMethod), spreadMethod)}");
                     }
-
-                    System.Diagnostics.Debug.WriteLine($"Out Prox - Out Target: {x}");
                 }
 
                 SetProximity(target, Math.Max(0, Convert.ToInt32(proximity)));

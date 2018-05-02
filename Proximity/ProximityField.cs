@@ -9,6 +9,10 @@ namespace Proximity
     [Windows.UI.Xaml.Data.Bindable]
     public class ProximityField : DependencyObject
     {
+        private const string ProximityPropertyName = "Proximity";
+        private const string ProximityRangePropertyName = "ProximityRange";
+        private const string ProximityPaddingPropertyName = "ProximityPadding";
+
         // A dict of top-level UIElements and the FrameworkElement that are being listened for
         private static Dictionary<UIElement, List<FrameworkElement>> _listeningElements = new Dictionary<UIElement, List<FrameworkElement>>();
 
@@ -16,12 +20,12 @@ namespace Proximity
         /// <summary>
         /// 
         /// </summary>
-        public static readonly DependencyProperty ProximityProperty = DependencyProperty.RegisterAttached("Proximity", typeof(int), typeof(DependencyObject), new PropertyMetadata(null));
+        public static readonly DependencyProperty ProximityProperty = DependencyProperty.RegisterAttached(ProximityPropertyName, typeof(int), typeof(DependencyObject), new PropertyMetadata(null));
 
         /// <summary>
         /// 
         /// </summary>
-        public static readonly DependencyProperty ProximityRangeProperty = DependencyProperty.RegisterAttached("ProximityRange", typeof(int), typeof(DependencyObject), new PropertyMetadata(0, new PropertyChangedCallback(ProximityRangeChanged)));
+        public static readonly DependencyProperty ProximityRangeProperty = DependencyProperty.RegisterAttached(ProximityRangePropertyName, typeof(int), typeof(DependencyObject), new PropertyMetadata(0, new PropertyChangedCallback(ProximityRangeChanged)));
         
         /// <summary>
         /// 
@@ -31,7 +35,12 @@ namespace Proximity
         /// <summary>
         /// 
         /// </summary>
-        public static readonly DependencyProperty ProximityPaddingProperty = DependencyProperty.RegisterAttached("ProximityPadding", typeof(int), typeof(DependencyObject), new PropertyMetadata(0));
+        public static readonly DependencyProperty ProximityPaddingProperty = DependencyProperty.RegisterAttached(ProximityPaddingPropertyName, typeof(int), typeof(DependencyObject), new PropertyMetadata(0));
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static readonly DependencyProperty ProximitySpreadMethodProperty = DependencyProperty.RegisterAttached(nameof(ProximitySpreadMethod), typeof(ProximitySpreadMethod), typeof(DependencyObject), new PropertyMetadata(ProximitySpreadMethod.Pad));
         #endregion Properties
 
         #region Property Getters/Setters
@@ -73,6 +82,16 @@ namespace Proximity
         public static int GetProximityPadding(DependencyObject element)
         {
             return (int)(element as FrameworkElement).GetValue(ProximityPaddingProperty);
+        }
+
+        public static void SetProximitySpreadMethod(DependencyObject element, ProximitySpreadMethod value)
+        {
+            (element as FrameworkElement).SetValue(ProximitySpreadMethodProperty, value);
+        }
+
+        public static ProximitySpreadMethod GetProximitySpreadMethod(DependencyObject element)
+        {
+            return (ProximitySpreadMethod)(element as FrameworkElement).GetValue(ProximitySpreadMethodProperty);
         }
         #endregion Property Getters/Setters
 
@@ -195,6 +214,18 @@ namespace Proximity
             return new Rect(new Point(proximityPadding * -1, proximityPadding * -1), new Size(targetWidthAndPadding, targetHeightAndPadding));
         }
 
+        private static double GetProximityFromEdge(FrameworkElement target, Point pointerPosition, double xFromCenter, double yFromCenter)
+        {
+            var proximityPadding = GetProximityPadding(target);
+            return Math.Max(xFromCenter - target.RenderSize.Width / 2, yFromCenter - target.RenderSize.Height / 2) - proximityPadding;
+        }
+
+        private static double GetProximityFromCenter(FrameworkElement target, Point pointerPosition, double xFromCenter, double yFromCenter)
+        {
+            var proximityPadding = GetProximityPadding(target);
+            return Math.Max(xFromCenter - proximityPadding, yFromCenter - proximityPadding);
+        }
+
         private static void Element_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             var element = sender as UIElement;
@@ -212,49 +243,59 @@ namespace Proximity
                 var x = Math.Abs(position.X - ((targetRect.Width / 2) - proximityPadding));
                 var y = Math.Abs(position.Y - ((targetRect.Height / 2) - proximityPadding));
 
-                int proximity;
+                double proximity;
                 if (proximityRect.Contains(position))
                 {
-                    // TODO: Do triangle math to find actual measurement, not just max x,y
-                    if (!targetRect.Contains(position))
+                    switch (mode)
                     {
-                        if (mode == ProximityMode.Edge)
-                        {
-                            proximity = Convert.ToInt32(Math.Max(x - target.RenderSize.Width / 2, y - target.RenderSize.Height / 2)) - proximityPadding;
-                        }
-                        else if (mode == ProximityMode.Center)
-                        {
-                            proximity = Convert.ToInt32(Math.Max(x - proximityPadding, y - proximityPadding));
-                        }
-                        else
-                        {
-                            throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
-                        }
-                    }
-                    else
-                    {
-                        if (mode == ProximityMode.Edge)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"In Prox - In Target: {x}");
-                            proximity = 0;
-                        }
-                        else if (mode == ProximityMode.Center)
-                        {
-                            proximity = Convert.ToInt32(Math.Max(x, y)) - proximityPadding;
-                        }
-                        else
-                        {
-                            throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
-                        }
+                        case ProximityMode.Center:
+                            proximity = GetProximityFromCenter(target, position, x, y);
+                            break;
+                        case ProximityMode.Edge:
+                            if (!targetRect.Contains(position))
+                            {
+                                proximity = GetProximityFromEdge(target, position, x, y);
+                            }
+                            else
+                            {
+                                proximity = 0;
+                            }
+                            break;
+                        default:
+                            throw new Exception($"Invalid {nameof(ProximityMode)}: {Enum.GetName(typeof(ProximityMode), mode)}");
                     }
                 }
                 else
                 {
+                    var spreadMethod = GetProximitySpreadMethod(target);
+
+                    switch(spreadMethod)
+                    {
+                        case ProximitySpreadMethod.Pad:
+                            proximity = proximityRange;
+                            break;
+                        case ProximitySpreadMethod.Clamp:
+                            proximity = 0;
+                            break;
+                        case ProximitySpreadMethod.Reflect:
+                            
+                        case ProximitySpreadMethod.Repeat:
+                            switch(mode)
+                            {
+                                case ProximityMode.Edge: proximity = GetProximityFromEdge(target, position, x, y); break;
+                                case ProximityMode.Center: proximity = Math.Max(x - proximityPadding, y - proximityPadding); break;
+                                default: throw new Exception($"Invalid ProximityMode: {Enum.GetName(typeof(ProximityMode), mode)}");
+                            }
+                            proximity = proximity % proximityRange;
+                            break;
+                        default:
+                            throw new Exception($"Invalid {nameof(ProximitySpreadMethod)}: {Enum.GetName(typeof(ProximitySpreadMethod), spreadMethod)}");
+                    }
+
                     System.Diagnostics.Debug.WriteLine($"Out Prox - Out Target: {x}");
-                    proximity = proximityRange;
                 }
 
-                SetProximity(target, Math.Max(0, proximity));
+                SetProximity(target, Math.Max(0, Convert.ToInt32(proximity)));
             }
         }
     }

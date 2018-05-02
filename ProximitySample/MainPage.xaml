@@ -10,12 +10,11 @@
 
     <Grid Background="LightSlateGray">
 
-        <Grid 
-              HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BorderThickness="1"
-                BorderBrush="Black"
-                Background="White">
+        <Grid HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              BorderThickness="1"
+              BorderBrush="Black"
+              Background="White">
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition MinWidth="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />

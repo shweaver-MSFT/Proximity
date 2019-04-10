@@ -10,8 +10,8 @@
 
     <Grid Background="LightSlateGray">
 
-        <Grid HorizontalAlignment="Center"
-              VerticalAlignment="Center"
+        <Grid HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
               BorderThickness="1"
               BorderBrush="Black"
               Background="White">
@@ -28,7 +28,7 @@
                 <RowDefinition MinHeight="{Binding (p:ProximityField.ProximityRange), ElementName=TheButton, Mode=OneWay}" />
             </Grid.RowDefinitions>
 
-            <!--<Viewbox 
+            <Viewbox 
                     Grid.RowSpan="3"
                     Grid.ColumnSpan="3"
                     HorizontalAlignment="Center"
@@ -46,8 +46,8 @@
                     Height="{Binding (p:ProximityField.Proximity), ElementName=TheButton3, Mode=OneWay}"
                     Width="{Binding (p:ProximityField.Proximity), ElementName=TheButton3, Mode=OneWay}">
                 <Rectangle RadiusX="1" RadiusY="1" Width="2" Height="2" Fill="Red" />
-            </Viewbox>-->
-            
+            </Viewbox>
+
             <Viewbox 
                     Grid.RowSpan="3"
                     Grid.ColumnSpan="3"
@@ -71,7 +71,7 @@
                     p:ProximityField.ProximityMode="{x:Bind p:ProximityMode.Edge}"
                     Content="{Binding (p:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
             </Button>
-            <!--<Button Name="TheButton2"
+            <Button Name="TheButton2"
                     Grid.Column="1"
                     Grid.Row="2"
                     Height="200"
@@ -92,7 +92,7 @@
                     p:ProximityField.ProximityRange="500"
                     p:ProximityField.ProximityMode="{x:Bind p:ProximityMode.Edge}"
                     Content="{Binding (p:ProximityField.Proximity), RelativeSource={RelativeSource Self}, Mode=OneWay}">
-            </Button>-->
+            </Button>
 
         </Grid>
     </Grid>

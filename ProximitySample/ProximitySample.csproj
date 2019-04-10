@@ -11,7 +11,7 @@
     <AssemblyName>ProximitySample</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.16299.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.17763.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
@@ -133,7 +133,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Proximity\Proximity.csproj">
-      <Project>{16176c10-3a69-401b-b12c-116c0610acb5}</Project>
+      <Project>{932a3bbf-8850-464f-b023-1fd08ce28394}</Project>
       <Name>Proximity</Name>
     </ProjectReference>
   </ItemGroup>
